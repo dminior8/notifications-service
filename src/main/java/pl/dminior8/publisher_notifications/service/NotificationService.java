@@ -1,26 +1,28 @@
 package pl.dminior8.publisher_notifications.service;
 
+import lombok.RequiredArgsConstructor;
+import org.quartz.SchedulerException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import pl.dminior8.publisher_notifications.configuration.RabbitMQConfig;
 import pl.dminior8.publisher_notifications.dto.NotificationDTO;
 import pl.dminior8.publisher_notifications.model.EStatus;
 import pl.dminior8.publisher_notifications.model.Notification;
+import pl.dminior8.publisher_notifications.repository.NotificationRepository;
 
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+
+import static pl.dminior8.publisher_notifications.model.EStatus.IN_PROGRESS;
 
 @Service
+@RequiredArgsConstructor
 public class NotificationService {
-    private final RabbitTemplate rabbitTemplate;
-    private final ConcurrentMap<String, Notification> notificationStorage = new ConcurrentHashMap<>();
+    private final NotificationRepository notificationRepository;
+    private final QuartzNotificationService quartzNotificationService;
 
-    public NotificationService(RabbitTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
-    }
 
-    public UUID scheduleNotification(NotificationDTO notificationDTO) {
+    public UUID scheduleNotification(NotificationDTO notificationDTO) throws SchedulerException {
         Notification notification =
                 Notification.builder()
                         .id(UUID.randomUUID())
@@ -29,20 +31,23 @@ public class NotificationService {
                         .priority(notificationDTO.getPriority())
                         .timezone(notificationDTO.getTimezone())
                         .scheduledTime(notificationDTO.getScheduledTime())
-                        .status(EStatus.PENDING)
+                        .status(EStatus.IN_PROGRESS)
+                        .retryCount(0)
                         .build();
-        notificationStorage.put(String.valueOf(notification.getId()), notification);
-        String routingKey = switch (notification.getChannel()) {
-            case PUSH -> RabbitMQConfig.PUSH_ROUTING_KEY;
-            case EMAIL -> RabbitMQConfig.EMAIL_ROUTING_KEY;
-        };
+        notificationRepository.save(notification);
 
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, routingKey, notification);
+        quartzNotificationService.scheduleNotification(notification, 0);
+
         return notification.getId();
     }
 
-    public Notification getNotification(String id) {
-        return notificationStorage.get(id);
+    public Optional<Notification> getNotification(UUID id) {
+        return notificationRepository.findById(id);
     }
+
+    public void updateNotification(Notification notification) {
+        notificationRepository.save(notification);
+    }
+
 }
 

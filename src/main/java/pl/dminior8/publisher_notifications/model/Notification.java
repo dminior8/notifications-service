@@ -5,14 +5,15 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Document(collection = "notifications")
 public class Notification {
     private UUID id;
     private String content;
@@ -21,5 +22,18 @@ public class Notification {
     private EPriority priority;
     private ZoneId timezone;
     private LocalDateTime scheduledTime;
+    private int retryCount;
+
+    @Override
+    public String toString() {
+        return "\nid=" + id
+                + ", \ncontent=" + content
+                + ", \nchannel=" + channel
+                + ", \nstatus=" + status
+                + ", \npriority=" + priority
+                + ", \ntimezone=" + timezone
+                + ", \nscheduledTime=" + scheduledTime
+                + ", \nretryCount=" + retryCount;
+    }
 }
 

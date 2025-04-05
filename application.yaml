@@ -10,5 +10,6 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://localhost:27017/notifications-db
-      database: notifications-db
+      uri: mongodb://root:example@localhost:27017/notifications-db?authSource=admin
+
+

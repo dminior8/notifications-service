@@ -1,40 +1,72 @@
 package pl.dminior8.publisher_notifications.job;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
+import org.quartz.SchedulerException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 import pl.dminior8.publisher_notifications.configuration.RabbitMQConfig;
 import pl.dminior8.publisher_notifications.model.EChannel;
+import pl.dminior8.publisher_notifications.model.EStatus;
 import pl.dminior8.publisher_notifications.model.Notification;
 import pl.dminior8.publisher_notifications.service.NotificationService;
+import pl.dminior8.publisher_notifications.service.QuartzNotificationService;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import static pl.dminior8.publisher_notifications.model.EStatus.IN_PROGRESS;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class NotificationJob implements Job {
     private final RabbitTemplate rabbitTemplate;
     private final NotificationService notificationService;
-
-    public NotificationJob(RabbitTemplate rabbitTemplate, NotificationService notificationService) {
-        this.rabbitTemplate = rabbitTemplate;
-        this.notificationService = notificationService;
-    }
+    private final QuartzNotificationService quartzNotificationService;
 
     @Override
     public void execute(JobExecutionContext context) {
-        String notificationId = context.getJobDetail().getJobDataMap().getString("notificationId");
-        Notification notification = notificationService.getNotification(notificationId);
+        UUID notificationId = UUID.fromString(context.getJobDetail().getJobDataMap().getString("notificationId"));
 
-        if (notification != null && notification.getChannel() != null) {
-            if(notification.getChannel() == EChannel.EMAIL){
-                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.EMAIL_ROUTING_KEY, notification);
-            }else {
-                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.PUSH_ROUTING_KEY, notification);
+        notificationService.getNotification(notificationId).ifPresent(notification -> {
+            if (notification.getStatus() == EStatus.IN_PROGRESS && notification.getRetryCount() < 3) {
+                String queue = notification.getChannel() == EChannel.PUSH
+                        ? RabbitMQConfig.PUSH_ROUTING_KEY
+                        : RabbitMQConfig.EMAIL_ROUTING_KEY;
+
+                try {
+                    rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, queue, notification);
+                    log.info("SENDING | Notification with ID {} successfully sent to queue.", notificationId);
+                } catch (DataAccessException e) {
+                    log.error("SENDING | Failed to send notification with ID {}. Retrying...", notificationId);
+                }
+                notification = notificationService.getNotification(notificationId).orElse(null);
+                if(notification != null && notification.getStatus() == EStatus.IN_PROGRESS) {
+                    scheduleRetry(notification);
+                }
+            } else if (notification.getRetryCount() >= 2) {
+                log.warn("FAILED | Notification with ID {} exceeded retry limit.", notificationId);
+                notification.setStatus(EStatus.FAILED);
+                notificationService.updateNotification(notification);
             }
-            log.info("Zaplanowane powiadomienie wysłane: " + notification.getId());
-        } else {
-            log.info("Powiadomienie nie znalezione: " + notificationId);
+        });
+    }
+
+    private void scheduleRetry(Notification notification) {
+        notification.setRetryCount(notification.getRetryCount() + 1);
+        notification.setStatus(EStatus.IN_PROGRESS);
+        notificationService.updateNotification(notification);
+
+        long retryDelayMillis = 3000; // Retry after 3 seconds
+
+        try {
+            quartzNotificationService.scheduleNotification(notification, retryDelayMillis);
+        } catch (SchedulerException e) {
+            log.error("Error scheduling retry for notification with ID {}", notification.getId(), e);
         }
     }
 }

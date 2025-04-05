@@ -1,6 +1,5 @@
 version: '3'
 services:
-  # MongoDB
   mongo:
     image: mongo:latest
     container_name: mongo
@@ -38,7 +37,7 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: guest
       RABBITMQ_PASSWORD: guest
-      SPRING_DATA_MONGODB_URI: mongodb://root:example@mongo:27017/notifications-db
+      SPRING_DATA_MONGODB_URI: mongodb://root:example@mongo:27017/notifications-db?authSource=admin
     depends_on:
       - mongo
       - rabbitmq

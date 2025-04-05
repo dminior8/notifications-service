@@ -1,42 +1,41 @@
 package pl.dminior8.publisher_notifications.listener;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import pl.dminior8.publisher_notifications.configuration.RabbitMQConfig;
 import pl.dminior8.publisher_notifications.model.EStatus;
 import pl.dminior8.publisher_notifications.model.Notification;
+import pl.dminior8.publisher_notifications.service.NotificationService;
 
 import java.util.Random;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class NotificationListener {
-
+    private final NotificationService notificationService;
     private final Random random = new Random();
 
     @RabbitListener(queues = RabbitMQConfig.PUSH_QUEUE)
     public void receivePushNotification(Notification notification) {
-        log.info("PUSH | Receiving notification:\n{}", formatNotification(notification));
-
         if (random.nextBoolean()) {
             notification.setStatus(EStatus.DELIVERED);
-            log.info("PUSH | Notification delivered successfully: {}", notification.getId());
+            notificationService.updateNotification(notification);
+            log.info("PUSH | Notification delivered successfully: {}", formatNotification(notification));
         } else {
-            notification.setStatus(EStatus.FAILED);
             log.warn("PUSH | Notification delivery failed after retries: {}", notification.getId());
         }
     }
 
     @RabbitListener(queues = RabbitMQConfig.EMAIL_QUEUE)
     public void receiveEmailNotification(Notification notification) {
-        log.info("EMAIL | Receiving notification:\n{}", formatNotification(notification));
-
         if (random.nextBoolean()) {
             notification.setStatus(EStatus.DELIVERED);
-            log.info("EMAIL | Notification delivered successfully: {}", notification.getId());
+            notificationService.updateNotification(notification);
+            log.info("EMAIL | Notification delivered successfully: {}", formatNotification(notification));
         } else {
-            notification.setStatus(EStatus.FAILED);
             log.warn("EMAIL | Notification delivery failed after retries: {}", notification.getId());
         }
     }
