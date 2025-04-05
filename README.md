@@ -84,10 +84,10 @@ The RabbitMQ Management will now be accessible at http://localhost:15672/.
 
 ## Endpoints
 
-| Method   | URL                       | Description                                                                       |
-| -------- |---------------------------|-----------------------------------------------------------------------------------|
-| `GET`    | `/api/notifications/{id}` | Retrieves a previously scheduled notification by its unique ID.                                |
-| `POST`   | `/api/notifications`              | Schedules a new notification for processing through the configured message queue. |
+| Method   | URL                          | Description                                                                       |
+| -------- |------------------------------|-----------------------------------------------------------------------------------|
+| `GET`    | `/api/v1/notifications/{id}` | Retrieves a previously scheduled notification by its unique ID.                                |
+| `POST`   | `/api/v1/notifications`      | Schedules a new notification for processing through the configured message queue. |
 
 
 ### Examples
@@ -98,6 +98,7 @@ The RabbitMQ Management will now be accessible at http://localhost:15672/.
 {
   "message": "Your message content",
   "channel": "EMAIL",
+  "priority": "LOW",
   "timestamp": "2025-04-05T12:00:00",
   "zoneId": "Europe/Warsaw"
 }
@@ -105,6 +106,7 @@ The RabbitMQ Management will now be accessible at http://localhost:15672/.
 #### Parameters
 - ```message```: The content of the notification.
 - ```channel```: The communication channel to use (EMAIL, PUSH).
+- ```priority```: The priority of message (HIGH/LOW). High priority notifications should be send first.
 - ```timestamp```: The time at which the notification should be sent.
 - ```zoneId```: The timezone for the notification.
 

@@ -13,11 +13,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class Notification implements Serializable {
+public class Notification {
     private UUID id;
     private String content;
     private EChannel channel;
     private EStatus status;
+    private EPriority priority;
     private ZoneId timezone;
     private LocalDateTime scheduledTime;
 }

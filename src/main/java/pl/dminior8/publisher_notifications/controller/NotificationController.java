@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 
 
 @RestController
-@RequestMapping("/notifications")
+@RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
 public class NotificationController {
     private final RabbitTemplate rabbitTemplate;

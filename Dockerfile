@@ -16,7 +16,7 @@ RUN ./mvnw dependency:go-offline
 COPY . .
 
 # Buduj aplikację
-RUN ./mvnw clean package -DskipTests
+# RUN ./mvnw clean package -DskipTests
 
 # Etap uruchamiania
 FROM openjdk:21-jdk-slim

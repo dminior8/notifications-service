@@ -26,6 +26,7 @@ public class NotificationService {
                         .id(UUID.randomUUID())
                         .content(notificationDTO.getContent())
                         .channel(notificationDTO.getChannel())
+                        .priority(notificationDTO.getPriority())
                         .timezone(notificationDTO.getTimezone())
                         .scheduledTime(notificationDTO.getScheduledTime())
                         .status(EStatus.PENDING)

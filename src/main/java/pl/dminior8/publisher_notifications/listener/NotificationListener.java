@@ -17,7 +17,7 @@ public class NotificationListener {
 
     @RabbitListener(queues = RabbitMQConfig.PUSH_QUEUE)
     public void receivePushNotification(Notification notification) {
-        log.info("➡️ PUSH | Receiving notification:\n{}", formatNotification(notification));
+        log.info("PUSH | Receiving notification:\n{}", formatNotification(notification));
 
         if (random.nextBoolean()) {
             notification.setStatus(EStatus.DELIVERED);
@@ -30,7 +30,7 @@ public class NotificationListener {
 
     @RabbitListener(queues = RabbitMQConfig.EMAIL_QUEUE)
     public void receiveEmailNotification(Notification notification) {
-        log.info("➡️ EMAIL | Receiving notification:\n{}", formatNotification(notification));
+        log.info("EMAIL | Receiving notification:\n{}", formatNotification(notification));
 
         if (random.nextBoolean()) {
             notification.setStatus(EStatus.DELIVERED);
@@ -46,6 +46,7 @@ public class NotificationListener {
                 ID: %s
                 Content: %s
                 Channel: %s
+                Priority: %s
                 Scheduled Time: %s
                 Timezone: %s
                 Status: %s
@@ -53,6 +54,7 @@ public class NotificationListener {
                 n.getId(),
                 n.getContent(),
                 n.getChannel(),
+                n.getPriority(),
                 n.getScheduledTime(),
                 n.getTimezone(),
                 n.getStatus()
