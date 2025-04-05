@@ -1,0 +1,56 @@
+version: '3'
+services:
+  # MongoDB
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ default port
+      - "15672:15672" # RabbitMQ management plugin (web UI)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app-network
+
+  producer-service:
+    build:
+      context: .
+    image: producer-service
+    container_name: producer-service
+    ports:
+      - "8080:8080"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      SPRING_DATA_MONGODB_URI: mongodb://root:example@mongo:27017/notifications-db
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - app-network
+
+# Sieć, która łączy usługi
+networks:
+  app-network:
+    driver: bridge
+
+# Volumes do MongoDB - wolumeny zapobiegają usunieciu danych gdy kontener usuwany/zatrzymywany
+volumes:
+  mongo-data:
+
