@@ -122,4 +122,4 @@ Response Body:
 The UUID is the unique identifier for the scheduled notification.
 
 ## Licence
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the [MIT License](https://github.com/dminior8/notifications-service/blob/main/LICENSE) - see the LICENSE file for details.
