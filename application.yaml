@@ -12,4 +12,21 @@ spring:
     mongodb:
       uri: mongodb://root:example@localhost:27017/notifications-db?authSource=admin
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    web:
+      server:
+        auto-time-requests: true
+
+
 

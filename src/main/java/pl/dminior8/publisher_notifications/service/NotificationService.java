@@ -1,5 +1,7 @@
 package pl.dminior8.publisher_notifications.service;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
 import org.springframework.stereotype.Service;
@@ -22,8 +24,12 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final QuartzNotificationService quartzNotificationService;
 
+    private final Counter notificationCreatedCounter;
+    private final Timer notificationProcessingTimer;
 
     public UUID scheduleNotification(NotificationDTO notificationDTO) throws SchedulerException {
+        Timer.Sample sample = Timer.start();
+
         Notification notification =
                 Notification.builder()
                         .id(UUID.randomUUID())
@@ -36,8 +42,11 @@ public class NotificationService {
                         .retryCount(0)
                         .build();
         notificationRepository.save(notification);
-
         quartzNotificationService.scheduleNotification(notification, 0);
+
+        notificationCreatedCounter.increment();
+
+        sample.stop(notificationProcessingTimer);
 
         return notification.getId();
     }
@@ -48,15 +57,17 @@ public class NotificationService {
             notification.setScheduledTime(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
             notificationRepository.save(notification);
             quartzNotificationService.scheduleNotification(notification, 0);
+
             return true;
         }
-        return false;
 
+        return false;
     }
 
     public void cancelNotification(UUID notificationId) throws SchedulerException {
         notificationRepository.deleteById(notificationId);
         quartzNotificationService.cancelNotification(notificationId);
+
     }
 
     public Optional<Notification> getNotification(UUID id) {

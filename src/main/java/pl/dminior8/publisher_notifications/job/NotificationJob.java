@@ -1,5 +1,6 @@
 package pl.dminior8.publisher_notifications.job;
 
+import io.micrometer.core.instrument.Counter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -29,6 +30,10 @@ public class NotificationJob implements Job {
     private final NotificationService notificationService;
     private final QuartzNotificationService quartzNotificationService;
 
+    // Micrometer counters and timers
+    private final Counter notificationSentCounter;
+    private final Counter notificationFailedCounter;
+
     @Override
     public void execute(JobExecutionContext context) {
         UUID notificationId = UUID.fromString(context.getJobDetail().getJobDataMap().getString("notificationId"));
@@ -52,8 +57,10 @@ public class NotificationJob implements Job {
                             processor
                     );
                     log.info("\tSENDING | Notification with ID {} successfully sent to queue.", notificationId);
+                    notificationSentCounter.increment();
                 } catch (DataAccessException e) {
                     log.error("\tSENDING | Failed to send notification with ID {}. Retrying...", notificationId);
+                    notificationFailedCounter.increment();
                 } finally {
                     quartzNotificationService.scheduleDelete(notification);
                 }
@@ -65,11 +72,11 @@ public class NotificationJob implements Job {
 
             }else if(notification.getStatus() == DELIVERED) {
                 log.info("\tDELIVERED | Notification with ID {} successfully delivered to queue.", notificationId);
-
             }else {
                 log.warn("FAILED | Notification with ID {} exceeded retry limit.", notificationId);
                 notification.setStatus(EStatus.FAILED);
                 notificationService.updateNotification(notification);
+                notificationFailedCounter.increment();
             }
 
             if(notification != null && (notification.getStatus() == DELIVERED || notification.getStatus() == FAILED)) {
