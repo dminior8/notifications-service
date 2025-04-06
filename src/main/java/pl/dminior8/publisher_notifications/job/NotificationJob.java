@@ -16,7 +16,6 @@ import pl.dminior8.publisher_notifications.model.Notification;
 import pl.dminior8.publisher_notifications.service.NotificationService;
 import pl.dminior8.publisher_notifications.service.QuartzNotificationService;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static pl.dminior8.publisher_notifications.model.EPriority.HIGH;
@@ -63,13 +62,16 @@ public class NotificationJob implements Job {
                 if(notification != null && notification.getStatus() == EStatus.IN_PROGRESS) {
                     scheduleRetry(notification);
                 }
+
             }else if(notification.getStatus() == DELIVERED) {
-                log.info("\tSUCCESS | Notification with ID {} successfully sent to queue.", notificationId);
+                log.info("\tDELIVERED | Notification with ID {} successfully delivered to queue.", notificationId);
+
             }else {
                 log.warn("FAILED | Notification with ID {} exceeded retry limit.", notificationId);
                 notification.setStatus(EStatus.FAILED);
                 notificationService.updateNotification(notification);
             }
+
             if(notification != null && (notification.getStatus() == DELIVERED || notification.getStatus() == FAILED)) {
                 quartzNotificationService.scheduleDelete(notification);
             }

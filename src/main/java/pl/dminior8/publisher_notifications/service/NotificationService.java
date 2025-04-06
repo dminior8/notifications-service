@@ -2,14 +2,15 @@ package pl.dminior8.publisher_notifications.service;
 
 import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
-import pl.dminior8.publisher_notifications.configuration.RabbitMQConfig;
 import pl.dminior8.publisher_notifications.dto.NotificationDTO;
 import pl.dminior8.publisher_notifications.model.EStatus;
 import pl.dminior8.publisher_notifications.model.Notification;
 import pl.dminior8.publisher_notifications.repository.NotificationRepository;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,6 +40,23 @@ public class NotificationService {
         quartzNotificationService.scheduleNotification(notification, 0);
 
         return notification.getId();
+    }
+
+    public boolean forceSendNotification(UUID notificationId) throws SchedulerException {
+        Notification notification = notificationRepository.findById(notificationId).orElse(null);
+        if (notification != null && notification.getStatus() == IN_PROGRESS) {
+            notification.setScheduledTime(LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()));
+            notificationRepository.save(notification);
+            quartzNotificationService.scheduleNotification(notification, 0);
+            return true;
+        }
+        return false;
+
+    }
+
+    public void cancelNotification(UUID notificationId) throws SchedulerException {
+        notificationRepository.deleteById(notificationId);
+        quartzNotificationService.cancelNotification(notificationId);
     }
 
     public Optional<Notification> getNotification(UUID id) {

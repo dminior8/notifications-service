@@ -1,17 +1,19 @@
 package pl.dminior8.publisher_notifications.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.stereotype.Service;
 import pl.dminior8.publisher_notifications.job.NotificationJob;
-import pl.dminior8.publisher_notifications.model.EPriority;
 import pl.dminior8.publisher_notifications.model.Notification;
 
 import java.util.Date;
+import java.util.UUID;
 
 import static pl.dminior8.publisher_notifications.model.EPriority.HIGH;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class QuartzNotificationService {
     private final Scheduler scheduler;
@@ -32,10 +34,21 @@ public class QuartzNotificationService {
                                 ? java.util.Date.from(notification.getScheduledTime().atZone(java.time.ZoneId.systemDefault()).toInstant())
                                 : new Date(System.currentTimeMillis() + retryDelayMillis)
                 )
+                .withPriority(notification.getPriority() == HIGH ? 10 : 5)
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
                 .build();
 
         scheduler.scheduleJob(jobDetail, trigger);
+    }
+
+    public void cancelNotification(UUID notificationId) throws SchedulerException {
+        JobKey jobKey = new JobKey(notificationId.toString(), "notifications");
+        if (scheduler.checkExists(jobKey)) {
+            scheduler.deleteJob(jobKey);
+            log.info("Notification {} canceled", notificationId);
+        }else{
+            log.info("Notification {} not found", notificationId);
+        }
     }
 
     public void scheduleDelete(Notification notification) {
