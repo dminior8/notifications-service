@@ -20,6 +20,8 @@ The Notifications Service is a Spring Boot application that allows for publishin
 - Docker
 - RabbitMQ
 - Spock
+- Prometheus
+- Grafana
 
 ## Setup
 
