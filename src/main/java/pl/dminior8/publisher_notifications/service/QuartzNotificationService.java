@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import pl.dminior8.publisher_notifications.job.NotificationJob;
 import pl.dminior8.publisher_notifications.model.Notification;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.UUID;
 
@@ -31,7 +34,7 @@ public class QuartzNotificationService {
                 .withIdentity(String.valueOf(notification.getId()), "notifications")
                 .startAt(
                         retryDelayMillis == 0
-                                ? java.util.Date.from(notification.getScheduledTime().atZone(java.time.ZoneId.systemDefault()).toInstant())
+                                ? adjustToAllowedHours(notification)
                                 : new Date(System.currentTimeMillis() + retryDelayMillis)
                 )
                 .withPriority(notification.getPriority() == HIGH ? 10 : 5)
@@ -61,6 +64,26 @@ public class QuartzNotificationService {
             throw new RuntimeException(e);
         }
     }
+
+    public Date adjustToAllowedHours(Notification notification) {
+        ZoneId zoneId = notification.getTimezone();
+        LocalDateTime scheduled = notification.getScheduledTime();
+
+
+        LocalTime time = scheduled.toLocalTime();
+        LocalTime start = LocalTime.of(8, 0);
+        LocalTime end = LocalTime.of(22, 0);
+
+        if (time.isBefore(start)) {
+            scheduled = LocalDateTime.of(scheduled.toLocalDate(), start);
+        } else if (time.isAfter(end)) {
+            scheduled = LocalDateTime.of(scheduled.toLocalDate().plusDays(1), start);
+        }
+
+        return Date.from(scheduled.atZone(zoneId).toInstant());
+    }
+
+
 
 }
 
