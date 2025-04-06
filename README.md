@@ -102,6 +102,7 @@ The RabbitMQ Management with dashboards will now be accessible at http://localho
   "message": "Your message content",
   "channel": "EMAIL",
   "priority": "LOW",
+  "recipient": "anowak",
   "timestamp": "2025-04-05T12:00:00",
   "zoneId": "Europe/Warsaw"
 }
@@ -110,6 +111,7 @@ The RabbitMQ Management with dashboards will now be accessible at http://localho
 - ```message```: The content of the notification.
 - ```channel```: The communication channel to use (EMAIL, PUSH).
 - ```priority```: The priority of message (HIGH/LOW). High priority notifications should be send first.
+- ```recipient```: Username or other identifier of recipient.
 - ```timestamp```: The time at which the notification should be sent.
 - ```zoneId```: The timezone for the notification.
 
@@ -118,9 +120,7 @@ Status: ```200 OK ``` (on successful notification).
 
 Response Body:
 ```
-{
-"message": "Notification scheduled: <UUID>"
-}
+Notification scheduled: a9a583f0-da7d-41f6-94b9-2468be63ad70
 ```
 The UUID is the unique identifier for the scheduled notification.
 

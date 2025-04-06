@@ -23,9 +23,9 @@ public class NotificationListener {
         if (random.nextBoolean()) {
             notification.setStatus(EStatus.DELIVERED);
             notificationService.updateNotification(notification);
-            log.info("SUCCES | Push notification delivered successfully: {}", formatNotification(notification));
+            log.info("SUCCES | Push notification delivered successfully for user {}: \n{}", notification.getRecipient(), formatNotification(notification));
         } else {
-            log.warn("FAILED | Push notification delivery faileds: {}", notification.getId());
+            log.warn("FAILED | Push notification delivery failed for user {}: \n{}", notification.getRecipient(), notification.getId());
         }
     }
 
@@ -34,9 +34,9 @@ public class NotificationListener {
         if (random.nextBoolean()) {
             notification.setStatus(EStatus.DELIVERED);
             notificationService.updateNotification(notification);
-            log.info("SUCCES | Email notification delivered successfully: {}", formatNotification(notification));
+            log.info("SUCCES | Email notification delivered successfully for user {}: \n{}", notification.getRecipient(), formatNotification(notification));
         } else {
-            log.warn("FAILED | Email notification delivery failed: {}", notification.getId());
+            log.warn("FAILED | Email notification delivery failed for user {}: \n{}", notification.getRecipient(), notification.getId());
         }
     }
 

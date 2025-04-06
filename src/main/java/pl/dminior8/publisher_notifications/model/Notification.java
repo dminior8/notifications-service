@@ -1,6 +1,5 @@
 package pl.dminior8.publisher_notifications.model;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
@@ -20,6 +19,7 @@ public class Notification {
     private EChannel channel;
     private EStatus status;
     private EPriority priority;
+    private String recipient;
     private ZoneId timezone;
     private LocalDateTime scheduledTime;
     private int retryCount;
@@ -31,6 +31,7 @@ public class Notification {
                 + ", \nchannel=" + channel
                 + ", \nstatus=" + status
                 + ", \npriority=" + priority
+                + ", \nrecipient=" + recipient
                 + ", \ntimezone=" + timezone
                 + ", \nscheduledTime=" + scheduledTime
                 + ", \nretryCount=" + retryCount;

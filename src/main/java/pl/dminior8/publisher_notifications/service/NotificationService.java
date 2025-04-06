@@ -36,6 +36,7 @@ public class NotificationService {
                         .content(notificationDTO.getContent())
                         .channel(notificationDTO.getChannel())
                         .priority(notificationDTO.getPriority())
+                        .recipient(notificationDTO.getRecipient())
                         .timezone(notificationDTO.getTimezone())
                         .scheduledTime(notificationDTO.getScheduledTime())
                         .status(EStatus.IN_PROGRESS)

@@ -1,6 +1,5 @@
 package pl.dminior8.publisher_notifications.dto;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -17,6 +16,7 @@ public class NotificationDTO {
     private String content;
     private EChannel channel;
     private EPriority priority;
+    private String recipient;
     private ZoneId timezone;
     private LocalDateTime scheduledTime;
 }
