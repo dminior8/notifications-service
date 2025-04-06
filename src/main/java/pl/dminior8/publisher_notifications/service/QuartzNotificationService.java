@@ -4,9 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.springframework.stereotype.Service;
 import pl.dminior8.publisher_notifications.job.NotificationJob;
+import pl.dminior8.publisher_notifications.model.EPriority;
 import pl.dminior8.publisher_notifications.model.Notification;
 
 import java.util.Date;
+
+import static pl.dminior8.publisher_notifications.model.EPriority.HIGH;
 
 @Service
 @RequiredArgsConstructor
@@ -14,11 +17,7 @@ public class QuartzNotificationService {
     private final Scheduler scheduler;
 
     public void scheduleNotification(Notification notification, long retryDelayMillis) throws SchedulerException {
-        String jobId = String.valueOf(notification.getId());
-
-        if (scheduler.checkExists(new JobKey(jobId, "notifications"))) {
-            scheduler.deleteJob(new JobKey(jobId, "notifications"));
-        }
+        scheduleDelete(notification);
 
         JobDetail jobDetail = JobBuilder.newJob(NotificationJob.class)
                 .withIdentity(String.valueOf(notification.getId()), "notifications")
@@ -37,6 +36,17 @@ public class QuartzNotificationService {
                 .build();
 
         scheduler.scheduleJob(jobDetail, trigger);
+    }
+
+    public void scheduleDelete(Notification notification) {
+        String jobId = String.valueOf(notification.getId());
+        try {
+            if (scheduler.checkExists(new JobKey(jobId, "notifications"))) {
+                scheduler.deleteJob(new JobKey(jobId, "notifications"));
+            }
+        } catch (SchedulerException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

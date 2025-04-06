@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.SchedulerException;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,8 @@ import pl.dminior8.publisher_notifications.service.QuartzNotificationService;
 import java.util.Optional;
 import java.util.UUID;
 
-import static pl.dminior8.publisher_notifications.model.EStatus.IN_PROGRESS;
+import static pl.dminior8.publisher_notifications.model.EPriority.HIGH;
+import static pl.dminior8.publisher_notifications.model.EStatus.*;
 
 @Component
 @Slf4j
@@ -39,19 +41,37 @@ public class NotificationJob implements Job {
                         : RabbitMQConfig.EMAIL_ROUTING_KEY;
 
                 try {
-                    rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, queue, notification);
-                    log.info("SENDING | Notification with ID {} successfully sent to queue.", notificationId);
+                    Notification finalNotification = notification;
+                    MessagePostProcessor processor = message -> {
+                        message.getMessageProperties().setPriority(finalNotification.getPriority() == HIGH ? 10 : 5);
+                        return message;
+                    };
+                    rabbitTemplate.convertAndSend(
+                            RabbitMQConfig.EXCHANGE_NAME,
+                            queue,
+                            notification,
+                            processor
+                    );
+                    log.info("\tSENDING | Notification with ID {} successfully sent to queue.", notificationId);
                 } catch (DataAccessException e) {
-                    log.error("SENDING | Failed to send notification with ID {}. Retrying...", notificationId);
+                    log.error("\tSENDING | Failed to send notification with ID {}. Retrying...", notificationId);
+                } finally {
+                    quartzNotificationService.scheduleDelete(notification);
                 }
+
                 notification = notificationService.getNotification(notificationId).orElse(null);
                 if(notification != null && notification.getStatus() == EStatus.IN_PROGRESS) {
                     scheduleRetry(notification);
                 }
-            } else if (notification.getRetryCount() >= 2) {
+            }else if(notification.getStatus() == DELIVERED) {
+                log.info("\tSUCCESS | Notification with ID {} successfully sent to queue.", notificationId);
+            }else {
                 log.warn("FAILED | Notification with ID {} exceeded retry limit.", notificationId);
                 notification.setStatus(EStatus.FAILED);
                 notificationService.updateNotification(notification);
+            }
+            if(notification != null && (notification.getStatus() == DELIVERED || notification.getStatus() == FAILED)) {
+                quartzNotificationService.scheduleDelete(notification);
             }
         });
     }

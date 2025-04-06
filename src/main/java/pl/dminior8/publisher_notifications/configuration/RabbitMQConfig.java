@@ -38,12 +38,18 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue pushQueue() {
-        return new Queue(PUSH_QUEUE, true);
+        return QueueBuilder
+                .durable(PUSH_QUEUE)
+                .withArgument("x-max-priority", 10)
+                .build();
     }
 
     @Bean
     public Queue emailQueue() {
-        return new Queue(EMAIL_QUEUE, true);
+        return QueueBuilder
+                .durable(EMAIL_QUEUE)
+                .withArgument("x-max-priority", 10)
+                .build();
     }
 
     @Bean
