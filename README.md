@@ -1,6 +1,6 @@
 # Notifications Service
 
-A simple service for handling notifications using a publisher-subscriber model with message queues. This service is part of a larger system designed to send notifications to different communication channels.
+Spring Boot application for scheduling and simulating notifications across channels (e.g., email, push). It uses RabbitMQ for message queuing and Quartz Scheduler for reliable task scheduling. The system adjusts for users' time zones to avoid sending notifications during inappropriate hours, ensures reliable delivery with retries, supports message prioritization, and allows immediate delivery overrides. It also includes a dashboard for monitoring notification statuses and server metrics.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -8,18 +8,18 @@ A simple service for handling notifications using a publisher-subscriber model w
 - [Setup](#setup)
 - [Building and Running the Application](#building-and-running-the-application)
 - [Endpoints](#endpoints)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Overview
-The Notifications Service is a Spring Boot application that allows for publishing notifications to various channels. It uses a message queue (such as RabbitMQ or Kafka) to send messages to subscribed consumers. The service can handle different types of notifications and sends them based on the configured channels.
+The Notifications Service is a Spring Boot application that allows for publishing notifications to various channels. It uses a message queue (RabbitMQ) to send messages to subscribed consumers. The service can handle different types of notifications and sends them based on the configured channels.
 
 ## Technologies Used
 - Java 21
 - Spring Boot 3.x
 - Maven
 - Docker
-- RabbitMQ (for messaging)
+- RabbitMQ
+- Spock
 
 ## Setup
 
@@ -79,15 +79,18 @@ docker build -t notifications-service .
 docker-compose up --build
 ```
 The application will now be accessible at http://localhost:8080.
-The RabbitMQ Management will now be accessible at http://localhost:15672/.
+The RabbitMQ Management with dashboards will now be accessible at http://localhost:15672/.
 
 
 ## Endpoints
 
 | Method   | URL                          | Description                                                                       |
 | -------- |------------------------------|-----------------------------------------------------------------------------------|
-| `GET`    | `/api/v1/notifications/{id}` | Retrieves a previously scheduled notification by its unique ID.                                |
+| `GET`    | `/api/v1/notifications/{id}` | Retrieves a previously scheduled notification by its unique ID.                   |
 | `POST`   | `/api/v1/notifications`      | Schedules a new notification for processing through the configured message queue. |
+| `POST`   | `/api/v1/notifications/{id}/force-send`     | Forces an immediate send of the notification identified by its ID. |
+| `DELETE`   | `/api/v1/notifications/{id}`      | Cancels the scheduled notification with the given ID.                      |
+| `GET`   | `/api/v1/metrics` | Retrieves metrics related to notifications, including statuses such as sent, pending, and failed. |
 
 
 ### Examples
@@ -121,5 +124,5 @@ Response Body:
 ```
 The UUID is the unique identifier for the scheduled notification.
 
-## Licence
+## License
 This project is licensed under the [MIT License](https://github.com/dminior8/notifications-service/blob/main/LICENSE) - see the LICENSE file for details.
