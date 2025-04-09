@@ -7,6 +7,7 @@ Spring Boot application for scheduling and simulating notifications across chann
 - [Technologies Used](#technologies-used)
 - [Setup](#setup)
 - [Building and Running the Application](#building-and-running-the-application)
+- [Related Repos](#related-repos)
 - [Endpoints](#endpoints)
 - [License](#license)
 
@@ -82,6 +83,18 @@ docker-compose up --build
 ```
 The application will now be accessible at http://localhost:8080.
 The RabbitMQ Management with dashboards will now be accessible at http://localhost:15672/.
+
+## Related Repos
+
+This project sends messages to RabbitMQ queues, but **does not handle the processing** of those messages directly.
+
+To properly consume messages from the queues (`pushQueue` and `emailQueue`), you must **clone and run** the following listener services:
+
+- [Push Notifications Listener](https://github.com/dminior8/push-notifications-listener)
+
+- [Email Notifications Listener](https://github.com/dminior8/email-notifications-listener)
+
+Make sure both services are up and running to ensure correct message consumption from RabbitMQ.
 
 
 ## Endpoints
