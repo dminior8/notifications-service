@@ -2,9 +2,11 @@ package pl.dminior8.publisher_notifications.service;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Timer.Sample;
 import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.dminior8.publisher_notifications.dto.NotificationDTO;
 import pl.dminior8.publisher_notifications.model.EStatus;
 import pl.dminior8.publisher_notifications.model.Notification;
@@ -16,6 +18,7 @@ import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
+import static io.micrometer.core.instrument.Timer.*;
 import static pl.dminior8.publisher_notifications.model.EStatus.IN_PROGRESS;
 
 @Service
@@ -27,8 +30,9 @@ public class NotificationService {
     private final Counter notificationCreatedCounter;
     private final Timer notificationProcessingTimer;
 
+    @Transactional
     public UUID scheduleNotification(NotificationDTO notificationDTO) throws SchedulerException {
-        Timer.Sample sample = Timer.start();
+        Sample sample = start();
 
         Notification notification =
                 Notification.builder()
@@ -52,6 +56,7 @@ public class NotificationService {
         return notification.getId();
     }
 
+    @Transactional
     public boolean forceSendNotification(UUID notificationId) throws SchedulerException {
         Notification notification = notificationRepository.findById(notificationId).orElse(null);
         if (notification != null && notification.getStatus() == IN_PROGRESS) {
@@ -65,6 +70,7 @@ public class NotificationService {
         return false;
     }
 
+    @Transactional
     public void cancelNotification(UUID notificationId) throws SchedulerException {
         notificationRepository.deleteById(notificationId);
         quartzNotificationService.cancelNotification(notificationId);
