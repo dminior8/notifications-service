@@ -12,11 +12,13 @@ COPY pom.xml /app/pom.xml
 RUN chmod +x mvnw
 RUN ./mvnw dependency:go-offline
 
+EXPOSE 8080
+
 # Skopiuj resztę projektu
 COPY . .
 
 # Buduj aplikację
-# RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 
 # Etap uruchamiania
 FROM openjdk:21-jdk-slim

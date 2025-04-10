@@ -9,3 +9,11 @@ scrape_configs:
       - targets: [ 'host.docker.internal:8080' ]
         labels:
           application: 'notifications-service'
+
+#  - job_name: 'email-notifications-listener'
+#    static_configs:
+#      - targets: ['email-notifications-listener:8081']
+#
+#  - job_name: 'push-notifications-listener'
+#    static_configs:
+#      - targets: ['push-notifications-listener:8082']
