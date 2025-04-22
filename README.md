@@ -7,7 +7,6 @@ Spring Boot application for scheduling and simulating notifications across chann
 - [Technologies Used](#technologies-used)
 - [Setup](#setup)
 - [Building and Running the Application](#building-and-running-the-application)
-- [Related Repos](#related-repos)
 - [Endpoints](#endpoints)
 - [License](#license)
 
@@ -56,6 +55,20 @@ $env:JAVA_HOME="C:\Program Files\Java\jdk-21"
 ## Building and Running the Application
 This project includes a Dockerfile to build and run the application within a Docker container. To build and run the container:
 
+### Required Project Structure
+
+To run the full notification system locally, you need to **clone and set up all three repositories** in the **same directory**:
+
+- [`notifications-service`](https://github.com/dminior8/notifications-service)
+- [`push-notifications-listener`](https://github.com/dminior8/push-notifications-listener)
+- [`email-notifications-listener`](https://github.com/dminior8/email-notifications-listener)
+
+Additionally, download the shared `docker-compose.yml` file from the following Gist and place it in the **same root directory** as the cloned projects:
+
+[Shared Docker Compose File](https://gist.github.com/dminior8/658738743a0e28981d9450990540d629)
+
+This setup ensures that all services (including RabbitMQ) are started together and can communicate properly through Docker Compose.
+
 ### Running with Docker
 
 Make sure Maven Wrapper is available in your repo. Check if the following file exists:
@@ -83,19 +96,6 @@ docker-compose up --build
 ```
 The application will now be accessible at http://localhost:8080.
 The RabbitMQ Management with dashboards will now be accessible at http://localhost:15672/.
-
-## Related Repos
-
-This project sends messages to RabbitMQ queues, but **does not handle the processing** of those messages directly.
-
-To properly consume messages from the queues (`pushQueue` and `emailQueue`), you must **clone and run** the following listener services:
-
-- [Push Notifications Listener](https://github.com/dminior8/push-notifications-listener)
-
-- [Email Notifications Listener](https://github.com/dminior8/email-notifications-listener)
-
-Make sure both services are up and running to ensure correct message consumption from RabbitMQ.
-
 
 ## Endpoints
 
