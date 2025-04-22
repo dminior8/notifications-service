@@ -23,7 +23,7 @@ public class RabbitMQConfig {
     @Bean
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory factory = new CachingConnectionFactory();
-        factory.setUri("amqp://guest:guest@rabbitmq:5672/virtualHost");
+        factory.setUri("amqp://guest:guest@rabbitmq:5672");
         return factory;
     }
 
